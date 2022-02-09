@@ -1,0 +1,34 @@
+{
+  "name": "homebridge-pir-motion-sensor-v2",
+  "version": "1.0.1",
+  "description": "Homebridge plugin for Motion Sensor for Node v12",
+  "main": "index.js",
+  "engines": {
+    "node": ">=6.12.2",
+    "homebridge": ">=0.4.33"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/locnhinho/homebridge-pir-motion-sensor.git"
+  },
+  "keywords": [
+    "homebridge-plugin",
+    "pir",
+    "motion-sensor",
+    "raspberry-pi",
+    "homebridge"
+  ],
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "author": "Loc Ho <locnhinho@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "rpi-gpio": "^2.1.7"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-standard": "^4.0.1"
+  }
+}
