@@ -15,6 +15,7 @@ class MotionSensor {
     this.name = config.name;
     this.pirPin = config.pirPin;
     this.motionDetected = false;
+    this.timeoutSeconds = config.timeoutSeconds ?? 10 // default is 10 seconds
   }
 
   identify(callback) {
@@ -41,6 +42,7 @@ class MotionSensor {
       if (channel === this.pirPin) {
         this.motionDetected = value;
         this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
+        setTimeout(this.timeoutSeconds)
       }
     });
 

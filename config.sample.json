@@ -12,7 +12,8 @@
     {
       "accessory": "Motion Sensor",
       "name": "Pi Motion Sensor",
-      "pirPin": 4
+      "pirPin": 4,
+      "timeoutSeconds": 10
     }
   ],
 
