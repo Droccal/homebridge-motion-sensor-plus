@@ -1,6 +1,6 @@
 {
   "name": "homebridge-pir-motion-plus",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Homebridge plugin for PIR motion sensor connected to GPIO",
   "main": "index.js",
   "engines": {

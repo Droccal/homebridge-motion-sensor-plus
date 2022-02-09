@@ -41,17 +41,21 @@ class MotionSensor {
 
     gpio.on('change', (channel, value) => {
       if (channel === this.pirPin) {
+        this.log.info("PIR Motion detected: " + value)
         this.motionDetected = value
-        if (this.motionDetected) {
-          // we can wait a defined amount of seconds before setting the motion
-          setTimeout(() => {
-            this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
-            // after motion was notified we wait and check if in that time another motion was detected
+        setImmediate(() => {
+          if (this.motionDetected) {
+            // we can wait a defined amount of seconds before setting the motion
             setTimeout(() => {
               this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
-            }, this.timeoutSeconds * 1000)
-          }, this.delaySeconds * 1000)
-        }
+              // after motion was notified we wait and check if in that time another motion was detected
+              setTimeout(() => {
+                this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
+              }, this.timeoutSeconds * 1000)
+            }, this.delaySeconds * 1000)
+          }
+        })
+
       }
     });
 
