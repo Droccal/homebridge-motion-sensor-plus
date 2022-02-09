@@ -40,9 +40,10 @@ class MotionSensor {
 
     gpio.on('change', (channel, value) => {
       if (channel === this.pirPin) {
-        this.motionDetected = value;
-        this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
-        setTimeout(this.timeoutSeconds)
+        setInterval(() => {
+          this.motionDetected = value;
+          this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
+        }, this.timeoutSeconds * 1000)
       }
     });
 
