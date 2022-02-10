@@ -1,0 +1,37 @@
+{
+  "pluginAlias": "homebridge-pir-motion-plus",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "PIR Motion Sensor",
+        "required": true
+      },
+      "ioPIN": {
+        "title": "pinPir",
+        "type": "integer",
+        "required": true,
+        "default": 4,
+        "description": "To which GPIO pin your PIR sensor is connected"
+      },
+      "timeoutSeconds": {
+        "title": "timeoutSeconds",
+        "type": "integer",
+        "required": false,
+        "default": 10,
+        "description": "Number of seconds to wait until checking for new movements"
+      },
+      "delayMilliseconds": {
+        "title": "delayMilliseconds",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "description": "Number of milliseconds to wait until notifying movement"
+      }
+    }
+  }
+}

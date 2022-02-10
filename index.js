@@ -16,7 +16,7 @@ class MotionSensor {
     this.pirPin = config.pirPin;
     this.motionDetected = false;
     this.timeoutSeconds = config.timeoutSeconds ?? 10 // default is 10 seconds
-    this.delaySeconds = config.delaySeconds ?? 0
+    this.delayMilliseconds = config.delayMilliseconds ?? 0
   }
 
   identify(callback) {
@@ -47,12 +47,14 @@ class MotionSensor {
           if (this.motionDetected) {
             // we can wait a defined amount of seconds before setting the motion
             setTimeout(() => {
+              this.log.info("After Delay: " + this.motionDetected)
               this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
               // after motion was notified we wait and check if in that time another motion was detected
               setTimeout(() => {
+                this.log.info("After timeout: " + this.motionDetected)
                 this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
               }, this.timeoutSeconds * 1000)
-            }, this.delaySeconds * 1000)
+            }, this.delayMilliseconds)
           }
         })
 
