@@ -1,6 +1,6 @@
 {
-  "pluginAlias": "homebridge-pir-motion-plus",
-  "pluginType": "platform",
+  "pluginAlias": "pir-motion-plus",
+  "pluginType": "accessory",
   "singular": true,
   "schema": {
     "type": "object",
