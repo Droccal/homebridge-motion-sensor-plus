@@ -11,8 +11,8 @@
         "default": "PIR Motion Sensor",
         "required": true
       },
-      "ioPIN": {
-        "title": "pinPir",
+      "pirPin": {
+        "title": "pirPin",
         "type": "integer",
         "required": true,
         "default": 4,
