@@ -1,7 +1,7 @@
 {
-  "name": "homebridge-pir-motion-plus",
-  "version": "1.0.7",
-  "description": "Homebridge plugin for PIR motion sensor connected to GPIO",
+  "name": "homebridge-motion-sensor-plus",
+  "version": "1.0.0",
+  "description": "Homebridge plugin for a motion sensor connected to GPIO",
   "main": "index.js",
   "engines": {
     "node": ">=6.12.2",
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Droccal/homebridge-pir-motion-plus.git"
+    "url": "https://github.com/Droccal/homebridge-motion-sensor-plus.git"
   },
   "keywords": [
     "homebridge-plugin",

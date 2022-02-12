@@ -1,14 +1,15 @@
 {
-  "pluginAlias": "pir-motion-plus",
+  "pluginAlias": "Motion Plus Sensor",
   "pluginType": "accessory",
   "singular": true,
+  "headerDisplay": "Depending on the sensor type a few adjustments can be made to each individual preference. Try to tweak the values until your use-case is fulfilled.",
   "schema": {
     "type": "object",
     "properties": {
       "name": {
         "title": "Name",
         "type": "string",
-        "default": "PIR Motion Sensor",
+        "default": "Motion Sensor",
         "required": true
       },
       "pirPin": {
@@ -25,12 +26,26 @@
         "default": 10,
         "description": "Number of seconds to wait until checking for new movements"
       },
+      "cacheSeconds": {
+        "title": "cacheSeconds",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "description": "Cache last movement and consider it after timeout. If movements were detected while waiting for timeout restart timeout."
+      },
       "delayMilliseconds": {
         "title": "delayMilliseconds",
         "type": "integer",
         "required": false,
         "default": 0,
         "description": "Number of milliseconds to wait until notifying movement"
+      },
+      "recognitionValue": {
+        "title": "recognitionValue",
+        "type": "boolean",
+        "required": false,
+        "default": true,
+        "description": "Value when movement was detected. For radar sensor it is 0 and no detection is 1 for example (meaning gpio will report true for radar when nothing was detected)"
       }
     }
   }

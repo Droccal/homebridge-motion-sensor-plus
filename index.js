@@ -6,7 +6,7 @@ let Service, Characteristic;
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
-    homebridge.registerAccessory('Motion Plus Sensor', MotionSensor);
+    homebridge.registerAccessory("homebridge-motion-sensor-plus",'Motion Plus Sensor', MotionSensor);
 };
 
 class MotionSensor {
@@ -14,14 +14,93 @@ class MotionSensor {
         this.log = log;
         this.name = config.name;
         this.pirPin = config.pirPin;
-        this.motionDetected = false;
         this.timeoutSeconds = config.timeoutSeconds ?? 10 // default is 10 seconds
         this.delayMilliseconds = config.delayMilliseconds ?? 0
+        this.recognitionValue = config.recognitionValue ?? true
+        this.cacheSeconds = config.cacheSeconds ?? 0
+
+        this.currentlyWaiting = false
+        this.afterTimeoutMotionDetected = false
+        this.lastMovement = new Date()
     }
 
     identify(callback) {
         this.log('Identify requested!');
         callback(null);
+    }
+
+    getSensorData(cb) {
+        gpio.read(this.pirPin, (err, value) => {
+            if (err) {
+                console.error(err); // eslint-disable-line no-console
+                return;
+            }
+            cb(value)
+        })
+    }
+
+    async startSensorMonitoring() {
+        while (true) {
+            this.getSensorData(async (sensor) => {
+                let movement = (sensor === this.recognitionValue)
+
+                if (movement) {
+                    this.lastMovement = Date.now()
+                    // we can wait a defined amount of seconds before setting the motion
+                    if (!this.currentlyWaiting) {
+                        this.log.info("Motion detected: " + movement)
+                        this.waitForDelay()
+                    }
+                }
+            })
+
+            await new Promise(r => setTimeout(r, 100))
+        }
+    }
+
+    async waitForDelay() {
+        this.currentlyWaiting = true
+
+        if (this.delayMilliseconds === 0) {
+            this.service.setCharacteristic(Characteristic.MotionDetected, true);
+            await this.waitForTimeout()
+        } else {
+            await new Promise(r => setTimeout(r, this.delayMilliseconds))
+
+            if (this.movementWithinCache()) {
+                this.service.setCharacteristic(Characteristic.MotionDetected, true);
+                await this.waitForTimeout()
+            } else {
+                this.service.setCharacteristic(Characteristic.MotionDetected, false);
+            }
+        }
+    }
+
+    async waitForTimeout() {
+        do {
+            await new Promise(r => setTimeout(r, this.timeoutSeconds * 1000))
+
+            if (this.movementWithinCache()) {
+                this.log.info("Got movement while waiting, using cached")
+                this.afterTimeoutMotionDetected = true
+                this.currentlyWaiting = true
+            } else {
+                this.getSensorData(async (sensor) => {
+                    let afterTimeout = (sensor === this.recognitionValue)
+                    this.log.info("After timeout: " + afterTimeout)
+
+                    this.afterTimeoutMotionDetected = afterTimeout
+                    this.service.setCharacteristic(Characteristic.MotionDetected, afterTimeout);
+                })
+            }
+        } while (this.afterTimeoutMotionDetected)
+
+        this.currentlyWaiting = false
+    }
+
+    movementWithinCache() {
+        let timeSinceLastMovement = Math.floor((Date.now() - this.lastMovement) / 1000)
+        return timeSinceLastMovement < this.cacheSeconds
     }
 
     getServices() {
@@ -36,56 +115,20 @@ class MotionSensor {
         this.service
             .getCharacteristic(Characteristic.MotionDetected)
             .on('get', (callback) => {
-                callback(null, this.motionDetected);
+                this.getSensorData((sensor) => {
+                    let current = (sensor === this.recognitionValue)
+                    callback(null, current)
+                })
             });
-
-
-        let delayTimer
-        let timeoutTimer
-
-        gpio.on('change', (channel, value) => {
-            if (channel === this.pirPin) {
-                this.log.info("PIR Motion detected: " + value)
-                this.motionDetected = value
-
-                if (value) {
-                    // we can wait a defined amount of seconds before setting the motion
-                    delayTimer = setTimeout(() => {
-                        this.log.info("After Delay: " + this.motionDetected)
-                        this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
-                        // after motion was notified we wait and check if in that time another motion was detected
-                        if (this.motionDetected) {
-                            timeoutTimer = setTimeout(() => {
-                                this.log.info("After timeout: " + this.motionDetected)
-                                this.service.setCharacteristic(Characteristic.MotionDetected, this.motionDetected);
-                            }, this.timeoutSeconds * 1000)
-                        } else {
-                            this.service.setCharacteristic(Characteristic.MotionDetected, false);
-                        }
-                    }, this.delayMilliseconds)
-                } else {
-                    clearTimeout(delayTimer)
-                    clearTimeout(timeoutTimer)
-                    this.service.setCharacteristic(Characteristic.MotionDetected, false);
-                }
-            }
-        });
 
         gpio.setup(this.pirPin, gpio.DIR_IN, gpio.EDGE_BOTH, () => {
-            gpio.read(this.pirPin, (err, value) => {
-                if (err) {
-                    console.error(err); // eslint-disable-line no-console
-                    return;
-                }
-
-                this.motionDetected = value;
-            });
+            this.startSensorMonitoring()
         });
 
         this.service
             .getCharacteristic(Characteristic.Name)
             .on('get', callback => {
-                callback(null, this.name);
+                callback(null, this.name)
             });
 
         return [informationService, this.service];
