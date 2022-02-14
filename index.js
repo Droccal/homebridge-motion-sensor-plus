@@ -22,6 +22,7 @@ class MotionSensor {
         this.currentlyWaiting = false
         this.afterTimeoutMotionDetected = false
         this.lastMovement = new Date()
+        this.motionDetected = false
     }
 
     identify(callback) {
@@ -42,17 +43,24 @@ class MotionSensor {
     async startSensorMonitoring() {
         while (true) {
             this.getSensorData(async (sensor) => {
-                let movement = (sensor === this.recognitionValue)
-
-                if (movement) {
+                this.motionDetected = (sensor === this.recognitionValue)
+                if (this.motionDetected) {
                     this.lastMovement = Date.now()
-                    // we can wait a defined amount of seconds before setting the motion
-                    if (!this.currentlyWaiting) {
-                        this.log.info("Motion detected: " + movement)
-                        this.waitForDelay()
-                    }
                 }
             })
+            await new Promise(r => setTimeout(r, 100))
+        }
+    }
+
+    async startPropertyMonitoring() {
+        while (true) {
+            if (this.motionDetected) {
+                // we can wait a defined amount of seconds before setting the motion
+                if (!this.currentlyWaiting) {
+                    this.log.info("Motion detected")
+                    await this.waitForDelay()
+                }
+            }
 
             await new Promise(r => setTimeout(r, 100))
         }
@@ -62,16 +70,19 @@ class MotionSensor {
         this.currentlyWaiting = true
 
         if (this.delayMilliseconds === 0) {
-            this.service.setCharacteristic(Characteristic.MotionDetected, true);
+            this.log.debug("No delay defined, waiting for timeout")
+            this.service.setCharacteristic(Characteristic.OccupancyDetected, true);
             await this.waitForTimeout()
         } else {
             await new Promise(r => setTimeout(r, this.delayMilliseconds))
 
             if (this.movementWithinCache()) {
-                this.service.setCharacteristic(Characteristic.MotionDetected, true);
+                this.log.debug("Got movement while waiting after delay, using cached")
+                this.service.setCharacteristic(Characteristic.OccupancyDetected, true);
                 await this.waitForTimeout()
             } else {
-                this.service.setCharacteristic(Characteristic.MotionDetected, false);
+                this.log.debug("No movement after cache")
+                this.service.setCharacteristic(Characteristic.OccupancyDetected, false);
             }
         }
     }
@@ -81,16 +92,16 @@ class MotionSensor {
             await new Promise(r => setTimeout(r, this.timeoutSeconds * 1000))
 
             if (this.movementWithinCache()) {
-                this.log.info("Got movement while waiting, using cached")
+                this.log.debug("Got movement while waiting, using cached")
                 this.afterTimeoutMotionDetected = true
                 this.currentlyWaiting = true
             } else {
                 this.getSensorData(async (sensor) => {
                     let afterTimeout = (sensor === this.recognitionValue)
-                    this.log.info("After timeout: " + afterTimeout)
+                    this.log.debug("After timeout: " + afterTimeout)
 
                     this.afterTimeoutMotionDetected = afterTimeout
-                    this.service.setCharacteristic(Characteristic.MotionDetected, afterTimeout);
+                    this.service.setCharacteristic(Characteristic.OccupancyDetected, afterTimeout);
                 })
             }
         } while (this.afterTimeoutMotionDetected)
@@ -111,19 +122,12 @@ class MotionSensor {
             .setCharacteristic(Characteristic.Model, 'Pi Motion Sensor')
             .setCharacteristic(Characteristic.SerialNumber, 'Raspberry Pi');
 
-        this.service = new Service.MotionSensor(this.name);
-        this.service
-            .getCharacteristic(Characteristic.MotionDetected)
-            .on('get', (callback) => {
-                this.getSensorData((sensor) => {
-                    let current = (sensor === this.recognitionValue)
-                    callback(null, current)
-                })
-            });
+        this.service = new Service.OccupancySensor(this.name);
 
         gpio.setup(this.pirPin, gpio.DIR_IN, gpio.EDGE_BOTH, () => {
             this.startSensorMonitoring()
         });
+        this.startPropertyMonitoring()
 
         this.service
             .getCharacteristic(Characteristic.Name)

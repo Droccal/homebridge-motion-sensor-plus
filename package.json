@@ -1,6 +1,6 @@
 {
   "name": "homebridge-motion-sensor-plus",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Homebridge plugin for a motion sensor connected to GPIO",
   "main": "index.js",
   "engines": {
