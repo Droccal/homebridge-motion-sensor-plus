@@ -1,3 +1,8 @@
+## [1.0.2] 15.02.2022
+- fix delay behavior
+- allow to config multiple sensors connected to the pi
+- add config to adjust cacheDelay
+
 ## [1.0.1] 14.02.2022
 
 - remove separate "get" for sensor status from Homebridge, since this destroyed the whole waiting logic

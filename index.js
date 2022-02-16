@@ -16,6 +16,7 @@ class MotionSensor {
         this.pirPin = config.pirPin;
         this.timeoutSeconds = config.timeoutSeconds ?? 10 // default is 10 seconds
         this.delayMilliseconds = config.delayMilliseconds ?? 0
+        this.delayCacheSeconds = config.delayCacheSeconds ?? 0
         this.recognitionValue = config.recognitionValue ?? true
         this.cacheSeconds = config.cacheSeconds ?? 0
 
@@ -55,7 +56,6 @@ class MotionSensor {
     async startPropertyMonitoring() {
         while (true) {
             if (this.motionDetected) {
-                // we can wait a defined amount of seconds before setting the motion
                 if (!this.currentlyWaiting) {
                     this.log.info("Motion detected")
                     await this.waitForDelay()
@@ -76,13 +76,21 @@ class MotionSensor {
         } else {
             await new Promise(r => setTimeout(r, this.delayMilliseconds))
 
-            if (this.movementWithinCache()) {
+            if (this.delayCacheSeconds > 0 && this.movementWithinCache(this.lastMovement, this.delayCacheSeconds)) {
                 this.log.debug("Got movement while waiting after delay, using cached")
                 this.service.setCharacteristic(Characteristic.OccupancyDetected, true);
                 await this.waitForTimeout()
             } else {
-                this.log.debug("No movement after cache")
-                this.service.setCharacteristic(Characteristic.OccupancyDetected, false);
+                this.getSensorData(async (sensor) => {
+                    if (sensor === this.recognitionValue) {
+                        this.service.setCharacteristic(Characteristic.OccupancyDetected, true);
+                        this.log.debug("New movement after delay")
+                        await this.waitForTimeout()
+                    } else {
+                        this.log.debug("No movement after cache")
+                        this.service.setCharacteristic(Characteristic.OccupancyDetected, false);
+                    }
+                })
             }
         }
     }
@@ -91,7 +99,7 @@ class MotionSensor {
         do {
             await new Promise(r => setTimeout(r, this.timeoutSeconds * 1000))
 
-            if (this.movementWithinCache()) {
+            if (this.cacheSeconds > 0 && this.movementWithinCache(this.lastMovement, this.cacheSeconds)) {
                 this.log.debug("Got movement while waiting, using cached")
                 this.afterTimeoutMotionDetected = true
                 this.currentlyWaiting = true
@@ -109,9 +117,9 @@ class MotionSensor {
         this.currentlyWaiting = false
     }
 
-    movementWithinCache() {
-        let timeSinceLastMovement = Math.floor((Date.now() - this.lastMovement) / 1000)
-        return timeSinceLastMovement < this.cacheSeconds
+    movementWithinCache(lastMove, cache) {
+        let timeSinceLastMovement = Math.floor((Date.now() - lastMove) / 1000)
+        return timeSinceLastMovement < cache
     }
 
     getServices() {

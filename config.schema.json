@@ -1,7 +1,7 @@
 {
   "pluginAlias": "Motion Plus Sensor",
   "pluginType": "accessory",
-  "singular": true,
+  "singular": false,
   "headerDisplay": "Depending on the sensor type a few adjustments can be made to each individual preference. Try to tweak the values until your use-case is fulfilled.",
   "schema": {
     "type": "object",
@@ -39,6 +39,13 @@
         "required": false,
         "default": 0,
         "description": "Number of milliseconds to wait until notifying movement"
+      },
+      "delayCacheSeconds": {
+        "title": "delayCacheSeconds",
+        "type": "integer",
+        "required": false,
+        "default": 0,
+        "description": "Cache last movement and consider it after delay."
       },
       "recognitionValue": {
         "title": "recognitionValue",
