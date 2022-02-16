@@ -17,8 +17,10 @@ class MotionSensor {
         this.timeoutSeconds = config.timeoutSeconds ?? 10 // default is 10 seconds
         this.delayMilliseconds = config.delayMilliseconds ?? 0
         this.delayCacheSeconds = config.delayCacheSeconds ?? 0
-        this.recognitionValue = config.recognitionValue ?? true
         this.cacheSeconds = config.cacheSeconds ?? 0
+        this.sensorType = config.sensorType ?? "pir"
+
+        this.recognitionValue = this.sensorType !== "radar";
 
         this.currentlyWaiting = false
         this.afterTimeoutMotionDetected = false

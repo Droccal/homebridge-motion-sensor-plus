@@ -12,6 +12,17 @@
         "default": "Motion Sensor",
         "required": true
       },
+      "sensorType": {
+        "title": "sensorType",
+        "type": "string",
+        "required": false,
+        "default": "pir",
+        "oneOf": [
+          {"title": "PIR Sensor", "enum": ["pir"]},
+          {"title": "Dopplerradar", "enum": ["radar"]}
+        ],
+        "description": "The type of motion sensor you are using."
+      },
       "pirPin": {
         "title": "pirPin",
         "type": "integer",
@@ -46,13 +57,6 @@
         "required": false,
         "default": 0,
         "description": "Cache last movement and consider it after delay."
-      },
-      "recognitionValue": {
-        "title": "recognitionValue",
-        "type": "boolean",
-        "required": false,
-        "default": true,
-        "description": "Value when movement was detected. For radar sensor it is 0 and no detection is 1 for example (meaning gpio will report true for radar when nothing was detected)"
       }
     }
   }

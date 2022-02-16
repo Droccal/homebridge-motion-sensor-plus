@@ -3,7 +3,6 @@
 This is a [homebridge](https://github.com/nfarina/homebridge) plugin to make a Raspberry Pi connected with a motion sensor for example:
 
 - PIR Sensor
-- Ultrasonic sensor
 - Radar sensor
 
 There are a few adjustments that can be made via the config.
