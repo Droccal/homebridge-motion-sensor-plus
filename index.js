@@ -6,26 +6,27 @@ let Service, Characteristic;
 module.exports = function (homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
-    homebridge.registerAccessory("homebridge-motion-sensor-plus",'Motion Plus Sensor', MotionSensor);
+    homebridge.registerAccessory("homebridge-motion-sensor-plus", 'Motion Plus Sensor', MotionSensor);
 };
 
 class MotionSensor {
     constructor(log, config) {
-        this.log = log;
-        this.name = config.name;
-        this.pirPin = config.pirPin;
+        this.log = log
+        this.name = config.name
+        this.gpioPin = config.gpioPin
         this.timeoutSeconds = config.timeoutSeconds ?? 10 // default is 10 seconds
         this.delayMilliseconds = config.delayMilliseconds ?? 0
         this.delayCacheSeconds = config.delayCacheSeconds ?? 0
         this.cacheSeconds = config.cacheSeconds ?? 0
         this.sensorType = config.sensorType ?? "pir"
 
-        this.recognitionValue = this.sensorType !== "radar";
+        this.recognitionValue = this.sensorType !== "radar"
 
         this.currentlyWaiting = false
         this.afterTimeoutMotionDetected = false
         this.lastMovement = new Date()
         this.motionDetected = false
+        this.propertyMonitoring = true
     }
 
     identify(callback) {
@@ -34,18 +35,18 @@ class MotionSensor {
     }
 
     getSensorData(cb) {
-        gpio.read(this.pirPin, (err, value) => {
-            if (err) {
-                console.error(err); // eslint-disable-line no-console
-                return;
-            }
-            cb(value)
+        gpio.read(this.gpioPin, (err, value) => {
+            cb(value, err)
         })
     }
 
     async startSensorMonitoring() {
-        while (true) {
-            this.getSensorData(async (sensor) => {
+        let error
+        while (error === undefined) {
+            this.getSensorData(async (sensor, err) => {
+                if (err) {
+                    error = new Error("The sensor cant be found on the configured gpio pin")
+                }
                 this.motionDetected = (sensor === this.recognitionValue)
                 if (this.motionDetected) {
                     this.lastMovement = Date.now()
@@ -53,10 +54,11 @@ class MotionSensor {
             })
             await new Promise(r => setTimeout(r, 100))
         }
+        return error
     }
 
     async startPropertyMonitoring() {
-        while (true) {
+        while (this.propertyMonitoring) {
             if (this.motionDetected) {
                 if (!this.currentlyWaiting) {
                     this.log.info("Motion detected")
@@ -134,8 +136,13 @@ class MotionSensor {
 
         this.service = new Service.OccupancySensor(this.name);
 
-        gpio.setup(this.pirPin, gpio.DIR_IN, gpio.EDGE_BOTH, () => {
-            this.startSensorMonitoring()
+        gpio.setup(this.gpioPin, gpio.DIR_IN, gpio.EDGE_BOTH, () => {
+            this.startSensorMonitoring().then(err => {
+                if(err !== undefined){
+                    this.log.info("It seems the gpio pin that was defined is not connected to a sensor")
+                    this.propertyMonitoring = false
+                }
+            })
         });
         this.startPropertyMonitoring()
 

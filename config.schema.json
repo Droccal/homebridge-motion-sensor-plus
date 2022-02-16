@@ -15,7 +15,7 @@
       "sensorType": {
         "title": "sensorType",
         "type": "string",
-        "required": false,
+        "required": true,
         "default": "pir",
         "oneOf": [
           {"title": "PIR Sensor", "enum": ["pir"]},
@@ -23,12 +23,12 @@
         ],
         "description": "The type of motion sensor you are using."
       },
-      "pirPin": {
-        "title": "pirPin",
+      "gpioPin": {
+        "title": "gpioPin",
         "type": "integer",
         "required": true,
         "default": 4,
-        "description": "To which GPIO pin your PIR sensor is connected"
+        "description": "To which GPIO pin your sensor is connected"
       },
       "timeoutSeconds": {
         "title": "timeoutSeconds",
